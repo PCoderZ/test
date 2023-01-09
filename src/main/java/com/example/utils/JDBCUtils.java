@@ -56,13 +56,65 @@ public class JDBCUtils {
         }
     }
 
+    // 使用 PreparedStatement 防止sql注入攻击
+    public static void testPreparedStatementQuery(Connection conn) throws SQLException {
+        String selectUserName1 = "mike' OR username = ";
+        String selectPassword1 = " OR password = '";
+
+        String selectUserName2 = "mike";
+        String selectPassword2 = "123456";
+
+        try(PreparedStatement ps = conn.prepareStatement("SELECT id, username, password FROM user WHERE username = ? AND password = ?")) {
+            ps.setObject(1, selectUserName2);
+            ps.setObject(2, selectPassword2);
+            try(ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    String username = rs.getString("username");
+                    String password = rs.getString("password");
+                    System.out.printf("user: id = %d, username = %s, password = %s\n", id, username, password);
+                }
+            }
+        }
+    }
+
+    // 插入数据
+    public static void testInsert(Connection conn) throws SQLException {
+
+        try(PreparedStatement ps = conn.prepareStatement("INSERT INTO student (id, name, sex, sal) VALUES (?, ?, ?, ?)")) {
+            ps.setObject(1, 100);
+            ps.setObject(2, "Jack");
+            ps.setObject(3, 1);
+            ps.setObject(4, 12.3);
+            int n = ps.executeUpdate();
+            System.out.printf("student update row: %d\n", n);
+        }
+
+        // 插入并获取主键
+        /*
+        try(PreparedStatement ps = conn.prepareStatement("INSERT INTO student (name, sex, sal) VALUES (?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+            ps.setObject(1, "kk");
+            ps.setObject(2, 0);
+            ps.setObject(3, 12.23);
+            int n = ps.executeUpdate();
+            try(ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    long id = rs.getLong(1);
+                    System.out.printf("student update row id: %d\n", id);
+                }
+            }
+        }
+
+         */
+    }
+
     public static void main(String[] args) throws SQLException {
         Connection conn = getConnection();
         if (conn == null || conn.isClosed()) {
             return;
         }
 
-        testSQLInjection(conn);
+        testInsert(conn);
 
     }
 
