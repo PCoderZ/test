@@ -87,7 +87,7 @@ public class JDBCUtils {
             ps.setObject(3, 1);
             ps.setObject(4, 12.3);
             int n = ps.executeUpdate();
-            System.out.printf("student update row: %d\n", n);
+            System.out.printf("student insert %d row\n", n);
         }
 
         // 插入并获取主键
@@ -108,14 +108,66 @@ public class JDBCUtils {
          */
     }
 
+    // update data
+    public static void testUpdate(Connection conn) throws SQLException {
+
+        try(PreparedStatement ps = conn.prepareStatement("UPDATE student SET sal = ? WHERE id = ?")) {
+            ps.setObject(1, 20.1);
+            ps.setObject(2, 100);
+            int n = ps.executeUpdate();
+            System.out.printf("student update %d row\n", n);
+        }
+
+    }
+
+    // delete data
+    public static void testDel(Connection conn) throws SQLException {
+        try(PreparedStatement ps = conn.prepareStatement("DELETE FROM student WHERE id = ?")) {
+            ps.setObject(1, 100);
+            int n = ps.executeUpdate();
+            System.out.printf("student delete %d row\n", n);
+        }
+    }
+
+    // test transaction
+    public static void testTransaction(Connection conn) throws SQLException {
+        int sid = 101;
+
+        PreparedStatement ps1 = conn.prepareStatement("INSERT INTO student (id, name, sex, sal) VALUES (?, ?, ?, ?)");
+        ps1.setObject(1, sid);
+        ps1.setObject(2, "kangkang");
+        ps1.setObject(3, 1);
+        ps1.setObject(4, 121.3);
+
+        PreparedStatement ps2 = conn.prepareStatement("UPDATE student SET sal = ? WHERE id = ?");
+        ps2.setObject(1, 200);
+        ps2.setObject(2, sid);
+
+        try {
+            conn.setAutoCommit(false);
+            int n = ps1.executeUpdate();
+            System.out.printf("Transaction insert %d row success\n", n);
+            if (sid == 102) {
+                throw new SQLException();
+            }
+            n = ps2.executeUpdate();
+            System.out.printf("Transaction update %d row success\n", n);
+            conn.commit();
+        } catch (SQLException e) {
+            System.out.printf("SQLException %s\n", e);
+            conn.rollback();
+        } finally {
+            conn.setAutoCommit(true);
+            conn.close();
+        }
+    }
+
     public static void main(String[] args) throws SQLException {
         Connection conn = getConnection();
         if (conn == null || conn.isClosed()) {
             return;
         }
-
-        testInsert(conn);
-
+        testTransaction(conn);
     }
 
 }
