@@ -163,11 +163,21 @@ public class JDBCUtils {
     }
 
     public static void main(String[] args) throws SQLException {
-        Connection conn = getConnection();
+
+        Connection conn;
+
+        //Connection conn = getConnection();
+        conn = JDBCUtilsConfig.getConnection();
+
         if (conn == null || conn.isClosed()) {
             return;
         }
-        testTransaction(conn);
+        System.out.println(conn);
+        testQuery(conn);
+
+        conn = JDBCUtilsConfig.getConnection();
+        System.out.println(conn);
+        testQuery(conn);
     }
 
 }
